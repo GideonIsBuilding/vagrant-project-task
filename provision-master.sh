@@ -52,13 +52,19 @@ echo "User '$new_username' has been created and granted root privileges."
 # Enable SSH key-based authentication between the master and slave nodes
 # --------------------------------------------------------
 ssh-keygen -t rsa
-cat ~/.ssh/id_rsa.pub | ssh root@192.168.56.6 "cat >> ~/.ssh/authorized_keys"
+ssh-copy-id -i ~/.ssh/id_rsa.pub vagrant@192.168.56.6
+
+
+# --------------------------------------------------------
+# Restart the SSH service to apply the changes
+# --------------------------------------------------------
+sudo systemctl restart ssh
 
 
 # --------------------------------------------------------
 # Copy the contents of /mnt/altschool on the master node to /mnt/altschool/slave on the slave node
 # --------------------------------------------------------
-ssh altschool@192.168.56.3 "rsync -av /mnt/altschool /home/altschool/"
+ssh altschool@192.168.56.5 "rsync -av /mnt/altschool /home/altschool/"
 
 
 # --------------------------------------------------------

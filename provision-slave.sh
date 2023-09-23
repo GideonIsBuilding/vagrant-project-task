@@ -3,7 +3,7 @@
 # --------------------------------------------------------
 # Set the root password
 # --------------------------------------------------------
-MYSQL_ROOT_PASSWORD="DevOpsCloud247"
+MYSQL_ROOT_PASSWORD="rootDBPass#12"
 
 
 echo "Provisioning slave..."
@@ -35,13 +35,49 @@ sudo apt install net-tools
 # --------------------------------------------------------
 # Copy the contents of /mnt/altschool on the master node to /mnt/altschool/slave on the slave node
 # --------------------------------------------------------
-ssh altschool@192.168.56.5 "mkdir -p /mnt/altschool/slave"
+# ssh altschool@192.168.56.5 "mkdir -p /mnt/altschool/slave"
 
 
 # --------------------------------------------------------
 # Install Apache web server
 # --------------------------------------------------------
 sudo apt install -y apache2
+
+
+# --------------------------------------------------------
+# Define the path to the sshd_config file
+# --------------------------------------------------------
+sshd_config="/etc/ssh/sshd_config"
+
+
+# --------------------------------------------------------
+# Define the new setting for PasswordAuthentication (yes or no)
+# --------------------------------------------------------
+new_password_auth="yes"
+
+
+# --------------------------------------------------------
+# Define the new setting for PubkeyAuthentication (yes or no)
+# --------------------------------------------------------
+new_pubkey_authentication="yes"
+
+
+# --------------------------------------------------------
+# Use sed to modify the PasswordAuthentication setting in the sshd_config file
+# --------------------------------------------------------
+sed -i "s/^PasswordAuthentication.*/PasswordAuthentication $new_password_auth/" "$sshd_config"
+
+
+# --------------------------------------------------------
+# Use sed to modify the PubkeyAuthentication setting in the sshd_config file
+# --------------------------------------------------------
+sed -i "s/^PubkeyAuthentication.*/PubkeyAuthentication $new_pubkey_authentication/" "$sshd_config"
+
+
+# --------------------------------------------------------
+# Restart the SSH service to apply the changes
+# --------------------------------------------------------
+sudo systemctl restart ssh
 
 
 # --------------------------------------------------------
@@ -129,7 +165,38 @@ echo "LAMP stack (Apache, MySQL, PHP) has been successfully installed."
 # --------------------------------------------------------
 # Begin the ssh procedures
 # --------------------------------------------------------
-./ssh.sh
+#./ssh.sh
+
+
+# --------------------------------------------------------
+# Remote machine SSH settings
+# --------------------------------------------------------
+# REMOTE_HOST="192.168.56.5"
+# REMOTE_USER="192.168.56.6"
+
+
+# --------------------------------------------------------
+# SSH key settings
+# --------------------------------------------------------
+# KEY_TYPE="rsa"
+# KEY_FILE="/home/vagrant/.ssh/id_rsa"
+# KEY_COMMENT=""
+
+
+# --------------------------------------------------------
+# Generate SSH key pair
+# --------------------------------------------------------
+# ssh-keygen -t "$KEY_TYPE" -f "$KEY_FILE" -C "$KEY_COMMENT"
+
+
+# --------------------------------------------------------
+# Copy the public key to the remote machine
+# --------------------------------------------------------
+# cat "$KEY_FILE.pub" | ssh "$REMOTE_USER@$REMOTE_HOST" "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+
+
+# echo "SSH key pair generated and copied to $REMOTE_HOST for $REMOTE_USER."
+
 
 
 # --------------------------------------------------------
