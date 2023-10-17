@@ -149,7 +149,7 @@ sudo apt install -y php libapache2-mod-php php-mysql
 # Enable Apache modules
 # --------------------------------------------------------
 a2enmod php7.4
-sudo systemctl resload apache2
+sudo systemctl reload apache2
 
 
 # --------------------------------------------------------
