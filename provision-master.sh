@@ -3,7 +3,7 @@
 # --------------------------------------------------------
 # Set the root password. It includes, lowercase letters, uppercase letters, numbers and special characters for strength. 
 # --------------------------------------------------------
-MYSQL_ROOT_PASSWORD="rootDBPass#12"
+# MYSQL_ROOT_PASSWORD="rootDBPass#12"
 
 
 echo "Provisioning master..."
@@ -29,6 +29,12 @@ sudo apt install net-tools
 
 
 # --------------------------------------------------------
+# Install the SSH server
+# --------------------------------------------------------
+sudo apt-get install -y openssh-server
+
+
+# --------------------------------------------------------
 # Define the username and password for the new user
 # --------------------------------------------------------
 new_username="altschool"
@@ -37,9 +43,11 @@ new_password="altschool1234"
 
 # --------------------------------------------------------
 # Create the user with a home directory and set the password
-useradd -m -s /bin/bash "$new_username"
-echo "$new_username:$new_password" | chpasswd
-
+useradd -m -s /bin/bash "$new_username" && \
+echo "$new_username:$new_password" | chpasswd && \
+mkdir -p /home/vagrant/.ssh && \
+chmod 700 /home/vagrant/.ssh && \
+chown -R vagrant:vagrant /home/vagrant/.ssh
 
 # --------------------------------------------------------
 # Add the user to the sudo group (for systems using sudo)
@@ -58,7 +66,7 @@ ssh-copy-id -i ~/.ssh/id_rsa.pub vagrant@192.168.56.6
 # --------------------------------------------------------
 # Restart the SSH service to apply the changes
 # --------------------------------------------------------
-sudo systemctl restart ssh
+sudo systemctl restart sshd
 
 
 # --------------------------------------------------------
@@ -68,9 +76,10 @@ ssh altschool@192.168.56.5 "rsync -av /mnt/altschool /home/altschool/"
 
 
 # --------------------------------------------------------
-# Install Apache web server
+# Install Apache web server and make it start on boot
 # --------------------------------------------------------
 sudo apt install -y apache2
+sudo apachectl -k start 
 
 
 # --------------------------------------------------------
@@ -101,26 +110,27 @@ echo "Starting MySQL server for the first time"
 
 sudo systemctl start mysql 2> /dev/null
 
-tempRootPass="`sudo grep 'temporary.*root@localhost' /var/log/mysqld.log | tail -m 1 | sed 's/.*root@localhost: //'`"
+# tempRootPass="`sudo grep 'temporary.*root@localhost' /var/log/mysqld.log | tail -m 1 | sed 's/.*root@localhost: //'`"
 
 
 # --------------------------------------------------------
 # Set new password for root user
 # --------------------------------------------------------
-echo "Setting up new mysql server root password"
-sudo mysql -u "root" --password="$tempRootPass" --connect-expired-password -e "alter user root@localhost identified by '${MYSQL_ROOT_PASSWORD}'; flush privileges;"
+# echo "Setting up new mysql server root password"
+# sudo mysql -u "root" --password="$tempRootPass" --connect-expired-password -e "alter user root@localhost identified by '${MYSQL_ROOT_PASSWORD}'; flush privileges;"
 
 
 # --------------------------------------------------------
 # Do the basic hardening
 # --------------------------------------------------------
-sudo mysql -u root --password="$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User=''; DROP DATABASE IF EXISTS test; DELETE FROM mysql.db WHERE Db='test OR Db='test\\_%'; FLUSH PRIVILEGES;"
-sudo systemctl status mysql
+# sudo mysql -u root --password="$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User=''; DROP DATABASE IF EXISTS test; DELETE FROM mysql.db WHERE Db='test OR Db='test\\_%'; FLUSH PRIVILEGES;"
+# sudo systemctl status mysql
 
 # --------------------------------------------------------
 # Run the MySQL security script
 # --------------------------------------------------------
-# sudo mysql_secure_installation
+sudo su
+mysql_secure_installation < response.txt
 
 
 # --------------------------------------------------------
@@ -139,19 +149,28 @@ sudo apt install -y php libapache2-mod-php php-mysql
 # Enable Apache modules
 # --------------------------------------------------------
 a2enmod php7.4
-sudo systemctl restart apache2
+sudo systemctl resload apache2
 
 
 # --------------------------------------------------------
 # Create a PHP test file to verify the installation
 # --------------------------------------------------------
-sudo echo "<?php phpinfo(); ?>" > /var/www/html/info.php
+sudo echo "<?php
+
+// Show all information, defaults to INFO_ALL
+phpinfo();
+
+// Show just the module information.
+// phpinfo(8) yields identical results.
+phpinfo(INFO_MODULES);
+
+?>" > /var/www/html/index.php
 
 
 # --------------------------------------------------------
-# Restart Apache to apply changes
+# Reload Apache to apply changes
 # --------------------------------------------------------
-sudo systemctl restart apache2
+sudo systemctl reload apache2
 
 
 # --------------------------------------------------------
