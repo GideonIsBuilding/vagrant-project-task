@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# --------------------------------------------------------
-# Set the root password. It includes, lowercase letters, uppercase letters, numbers and special characters for strength. 
-# --------------------------------------------------------
-# MYSQL_ROOT_PASSWORD="rootDBPass#12"
-
-
 echo "Provisioning master..."
 
 # --------------------------------------------------------
@@ -89,48 +83,17 @@ sudo apt install -y mysql-server
 
 
 # --------------------------------------------------------
-# Initialize MySQL with a default user and password on both nodes
-# --------------------------------------------------------
-# ssh altschool@192.168.56.3 "mysql -u root -p < /vagrant/init.sql"
-# ssh altschool@192.168.56.5 "mysql -u root -p < /vagrant/init.sql"
-
-
-# --------------------------------------------------------
-# Update the MySQL configuration file
-# --------------------------------------------------------
-# sudo sed -i 's/validate_password_policy=0/validate_password_policy=1/g' /etc/mysql/my.cnf
-# sudo sed -i 's/bind-address=127.0.0.1/bind-address=0.0.0.0/g' /etc/mysql/my.cnf
-# sudo sed -i 's/skip-networking/\#skip-networking/g' /etc/mysql/my.cnf
-
-
-# --------------------------------------------------------
-# Start the MySQL Server and grep temporary password
+# Start the MySQL Server and redirect standard error ouput to file
 # --------------------------------------------------------
 echo "Starting MySQL server for the first time"
 
 sudo systemctl start mysql 2> /dev/null
 
-# tempRootPass="`sudo grep 'temporary.*root@localhost' /var/log/mysqld.log | tail -m 1 | sed 's/.*root@localhost: //'`"
-
 
 # --------------------------------------------------------
-# Set new password for root user
+# Secure MySQL installation with the options set in the response.txt file
 # --------------------------------------------------------
-# echo "Setting up new mysql server root password"
-# sudo mysql -u "root" --password="$tempRootPass" --connect-expired-password -e "alter user root@localhost identified by '${MYSQL_ROOT_PASSWORD}'; flush privileges;"
-
-
-# --------------------------------------------------------
-# Do the basic hardening
-# --------------------------------------------------------
-# sudo mysql -u root --password="$MYSQL_ROOT_PASSWORD" -e "DELETE FROM mysql.user WHERE User=''; DROP DATABASE IF EXISTS test; DELETE FROM mysql.db WHERE Db='test OR Db='test\\_%'; FLUSH PRIVILEGES;"
-# sudo systemctl status mysql
-
-# --------------------------------------------------------
-# Run the MySQL security script
-# --------------------------------------------------------
-sudo su
-mysql_secure_installation < response.txt
+sudo mysql_secure_installation < response.txt
 
 
 # --------------------------------------------------------
@@ -178,6 +141,59 @@ sudo systemctl reload apache2
 # --------------------------------------------------------
 echo "LAMP stack (Apache, MySQL, PHP) has been successfully installed."
 
+
+# --------------------------------------------------------
+# Update packages and install rsync
+# --------------------------------------------------------
+sudo apt update && sudo apt install rsync -y
+
+
+# --------------------------------------------------------
+# Copy the test.php file to the web directory
+# --------------------------------------------------------
+rsync -avz test.php altschool@slave:/var/www/html/
+
+
+# --------------------------------------------------------
+# Install Nginx on the Master node (for load balancing)
+# --------------------------------------------------------
+vagrant ssh master -c "sudo apt install -y nginx"
+
+
+# --------------------------------------------------------
+# Create an Nginx configuration file
+# --------------------------------------------------------
+echo "
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream backend {
+        server 192.168.56.5;
+        server 192.168.56.6;
+    }
+
+    server {
+        listen 800;
+        location / {
+            proxy_pass http://backend;
+        }
+    }
+}" > nginx-load-balancer.conf
+
+
+# --------------------------------------------------------
+# Move the configuration file to the nginx foler in the etc directory
+# --------------------------------------------------------
+sudo mv /home/vagrant/nginx-load-balancer.conf /etc/nginx/nginx.conf
+
+
+# --------------------------------------------------------
+# Test if configuration is correct and restart nginx
+# --------------------------------------------------------
+sudo nginx -t
+sudo systemctl restart nginx
 
 # --------------------------------------------------------
 # Clean up and exit
