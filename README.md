@@ -9,8 +9,8 @@ of two Vagrant-based Ubuntu systems, designated as `Master` and `Slave`, with an
 
 The tools needed to run these codes are:
 
-1. [Vagrant] (https://www.vagrantup.com/downloads.html)
-2. [Oracle VM VirtualBox] (https://www.virtualbox.org/)
+1. [Vagrant](https://www.vagrantup.com/downloads.html)
+2. [Oracle VM VirtualBox](https://www.virtualbox.org/)
 
 ## Infrastructure Configuration
 
