@@ -5,6 +5,13 @@
 Develop a bash script to orchestrate the automated deployment
 of two Vagrant-based Ubuntu systems, designated as `Master` and `Slave`, with an integrated LAMP stack on both systems.
 
+## Prerequisites
+
+The tools needed to run these codes are:
+
+1. [Vagrant] (https://www.vagrantup.com/downloads.html)
+2. [Oracle VM VirtualBox] (https://www.virtualbox.org/)
+
 ## Infrastructure Configuration
 
 ### Deploy Two Ubuntu Systems
@@ -28,6 +35,7 @@ On initiation, copy the contents of `/mnt/altschool` directory from the `Master`
 ### Process Monitoring
 
 The `Master` node should display an overview of the Linux process management, showcasing currently running processes.
+![](./images/Top%20Screenshot.jpg)
 
 ## LAMP Stack Deployment:
 
@@ -40,4 +48,6 @@ The `Master` node should display an overview of the Linux process management, sh
 
 1. A bash script encapsulating the entire deployment process adhering to the specifications mentioned above. Documentation accompanying the script, elucidating the steps and procedures for execution.
 2. A test PHP page validating the LAMP setup on both nodes.
+   ![](./images/PHP%20Master.jpg)
+   ![](./images/PHP%20Slave.jpg)
 3. A Load balancer using nginx to allow for traffic to the LAMP using the master and the slave nodes.
