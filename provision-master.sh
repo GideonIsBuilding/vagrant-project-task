@@ -157,7 +157,7 @@ rsync -avz test.php altschool@slave:/var/www/html/
 # --------------------------------------------------------
 # Install Nginx on the Master node (for load balancing)
 # --------------------------------------------------------
-vagrant ssh master -c "sudo apt install -y nginx"
+sudo apt install -y nginx
 
 
 # --------------------------------------------------------
